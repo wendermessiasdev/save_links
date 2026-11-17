@@ -1,0 +1,58 @@
+{
+  "grupos": [
+    {
+      "id": "trabalho",
+      "nome": "Trabalho",
+      "links": [
+        {
+          "id": "gmail",
+          "nome": "Gmail",
+          "url": "https://mail.google.com",
+          "descricao": "Acesse sua caixa de entrada."
+        },
+        {
+          "id": "drive",
+          "nome": "Google Drive",
+          "url": "https://drive.google.com",
+          "descricao": "Arquivos e documentos na nuvem."
+        },
+        {
+          "id": "github",
+          "nome": "GitHub",
+          "url": "https://github.com",
+          "descricao": "Repositórios e projetos de código."
+        }
+      ]
+    },
+    {
+      "id": "estudos",
+      "nome": "Estudos",
+      "links": [
+        {
+          "id": "wikipedia",
+          "nome": "Wikipédia",
+          "url": "https://pt.wikipedia.org",
+          "descricao": "Uma enciclopédia livre para consulta."
+        },
+        {
+          "id": "coursera",
+          "nome": "Coursera",
+          "url": "https://www.coursera.org",
+          "descricao": "Cursos para aprender algo novo."
+        }
+      ]
+    },
+    {
+      "id": "inspiracao",
+      "nome": "Inspiração",
+      "links": [
+        {
+          "id": "unsplash",
+          "nome": "Unsplash",
+          "url": "https://unsplash.com",
+          "descricao": "Fotografias para inspiração visual."
+        }
+      ]
+    }
+  ]
+}

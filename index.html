@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f1eb">
+    <meta name="description" content="Organize seus links pessoais com acesso individual pela sua conta Google.">
+    <title>Meus links</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" id="brand-home" aria-label="Meus links, início">
+          <span class="brand-mark" aria-hidden="true">↗</span>
+          <span>meus<span class="brand-light">links</span></span>
+        </a>
+        <div class="topbar-actions">
+          <button class="button button-quiet theme-toggle" id="theme-toggle" type="button" aria-label="Mudar para tema escuro" title="Mudar para tema escuro">
+            <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8 8.5 8.5 0 1 0 20.2 15.2Z"/></svg>
+            <span class="theme-label">Escuro</span>
+          </button>
+          <span class="user-email" id="user-email" hidden></span>
+          <button class="button button-outline" id="signout-button" type="button" hidden>Sair</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> SUA BIBLIOTECA PESSOAL</div>
+          <h1 id="page-title">Seus links,<br><span>em qualquer lugar.</span></h1>
+          <p class="intro-copy">Organize seus sites favoritos em grupos. Entre com sua conta Google para guardar seus dados com segurança.</p>
+        </section>
+
+        <section class="login-card" id="login-panel" aria-labelledby="login-title">
+          <div class="login-symbol" aria-hidden="true">↗</div>
+          <p class="card-kicker">ACESSO INDIVIDUAL</p>
+          <h2 id="login-title">Entre para continuar</h2>
+          <p class="login-copy">Seus grupos ficam associados à sua conta. Cada pessoa tem sua própria biblioteca de links.</p>
+          <button class="google-button" id="google-signin" type="button">
+            <span class="google-g" aria-hidden="true">G</span>
+            <span>Continuar com Google</span>
+          </button>
+          <p class="setup-message" id="setup-message" hidden>Falta conectar seu projeto Firebase. Preencha firebase-config.js e siga as instruções do README.</p>
+          <p class="login-error" id="login-error" role="alert" hidden></p>
+        </section>
+
+        <section class="app-panel" id="app-panel" hidden>
+          <div class="welcome-row">
+            <div><p class="card-kicker">BEM-VINDO(A)</p><h2 id="welcome-name">Sua biblioteca</h2></div>
+            <span class="private-badge"><span aria-hidden="true">●</span> Seus dados são privados</span>
+          </div>
+          <section class="workspace" aria-live="polite">
+            <div class="groups-view" id="groups-view">
+              <div class="section-heading">
+                <div><p class="section-kicker">ORGANIZAÇÃO</p><h2>Seus grupos</h2></div>
+                <button class="button button-outline" id="add-group-button" type="button"><span class="plus" aria-hidden="true">+</span> Novo grupo</button>
+              </div>
+              <div class="group-grid" id="group-list"></div>
+              <div class="empty-state" id="empty-groups" hidden>
+                <div class="empty-icon" aria-hidden="true">▤</div>
+                <h3>Crie seu primeiro grupo</h3>
+                <p>Separe seus links por assunto, como trabalho, estudos ou viagens.</p>
+                <button class="button button-dark" type="button" data-action="new-group">Criar grupo</button>
+              </div>
+            </div>
+
+            <div class="links-view" id="links-view" hidden>
+              <div class="links-toolbar">
+                <button class="back-button" id="back-button" type="button"><span aria-hidden="true">←</span> Voltar para os grupos</button>
+                <div class="group-actions">
+                  <button class="text-button" id="edit-group-button" type="button">Editar grupo</button>
+                  <button class="text-button text-danger" id="delete-group-button" type="button">Excluir</button>
+                </div>
+              </div>
+              <div class="links-heading"><p class="section-kicker">LINKS DO GRUPO</p><h2 id="selected-group-name"></h2></div>
+              <div class="link-list" id="link-list"></div>
+              <div class="empty-state empty-links" id="empty-links" hidden><div class="empty-icon" aria-hidden="true">↗</div><h3>Nenhum link por aqui ainda</h3><p>Adicione o primeiro link a este grupo.</p></div>
+              <button class="add-link-card" id="add-link-button" type="button"><span class="plus" aria-hidden="true">+</span> Adicionar link</button>
+            </div>
+            <p class="app-error" id="app-error" role="alert" hidden></p>
+          </section>
+          <p class="cloud-note"><span aria-hidden="true">☁</span> Seus dados são salvos na nuvem e ficam separados pela sua conta Google.</p>
+        </section>
+      </main>
+
+      <footer class="footer"><span>Feito para guardar o que importa.</span><span class="footer-dot">●</span><span>Uma biblioteca para cada conta.</span></footer>
+    </div>
+
+    <dialog class="editor-dialog" id="editor-dialog" aria-labelledby="dialog-title">
+      <form id="editor-form" novalidate>
+        <div class="dialog-topline"><span class="dialog-kicker" id="dialog-kicker">NOVO GRUPO</span><button class="icon-button" id="close-dialog" type="button" aria-label="Fechar">×</button></div>
+        <h2 id="dialog-title">Criar um grupo</h2>
+        <p class="dialog-description" id="dialog-description">Dê um nome para encontrar seus links com facilidade.</p>
+        <label class="field-label" for="name-input" id="name-label">Nome do grupo</label>
+        <input class="field-input" id="name-input" name="name" type="text" maxlength="80" placeholder="Ex.: Trabalho, Receitas, Viagens" required>
+        <div id="url-field" hidden>
+          <label class="field-label" for="url-input">Endereço do site</label>
+          <input class="field-input" id="url-input" name="url" type="url" inputmode="url" placeholder="https://exemplo.com" maxlength="2048">
+          <label class="field-label description-label" for="description-input">Descrição <span>(opcional)</span></label>
+          <textarea class="field-input field-textarea" id="description-input" name="description" rows="3" maxlength="300" placeholder="O que você encontra neste site?"></textarea>
+        </div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button class="button button-quiet" id="cancel-dialog" type="button">Cancelar</button><button class="button button-dark" id="submit-dialog" type="submit">Criar grupo</button></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

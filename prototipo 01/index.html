@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f1eb">
+    <meta name="description" content="Organize seus links pessoais em grupos, com seus dados salvos no próprio navegador.">
+    <title>Meus links</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Meus links, início" id="brand-home">
+          <span class="brand-mark" aria-hidden="true">↗</span>
+          <span>meus<span class="brand-light">links</span></span>
+        </a>
+        <div class="topbar-actions">
+          <button class="button button-quiet theme-toggle" id="theme-toggle" type="button" aria-label="Mudar para tema escuro" title="Mudar para tema escuro">
+            <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8 8.5 8.5 0 1 0 20.2 15.2Z"/></svg>
+            <span class="theme-label">Escuro</span>
+          </button>
+          <button class="button button-quiet" id="import-button" type="button" aria-label="Carregar um arquivo dados.txt" title="Carregar um arquivo dados.txt">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7 8m5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+            <span>Carregar TXT</span>
+          </button>
+          <input id="import-file" type="file" accept=".txt,.json,text/plain,application/json" hidden>
+          <button class="button button-dark" id="export-button" type="button" aria-label="Baixar uma cópia de segurança em TXT" title="Baixar uma cópia de segurança em TXT">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+            <span>Backup TXT</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <section class="intro" aria-labelledby="page-title">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> SEU ESPAÇO PESSOAL</div>
+          <h1 id="page-title">Seus links,<br><span>no lugar certo.</span></h1>
+          <p class="intro-copy">Guarde e organize os sites que fazem parte do seu dia.</p>
+        </section>
+
+        <section class="workspace" aria-live="polite">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker" id="section-kicker">ORGANIZAÇÃO</p>
+              <h2 id="section-title">Seus grupos</h2>
+            </div>
+            <button class="button button-outline" id="add-group-button" type="button">
+              <span class="plus" aria-hidden="true">+</span> Novo grupo
+            </button>
+          </div>
+          <div id="group-view">
+            <div class="group-grid" id="group-list"></div>
+            <div class="empty-state" id="empty-groups" hidden>
+              <div class="empty-icon" aria-hidden="true">▤</div>
+              <h3>Comece pelo primeiro grupo</h3>
+              <p>Crie um grupo para separar seus links por assunto.</p>
+              <button class="button button-dark" type="button" data-action="new-group">Criar meu primeiro grupo</button>
+            </div>
+          </div>
+          <div id="link-view" hidden>
+            <div class="links-toolbar">
+              <button class="back-button" id="back-button" type="button"><span aria-hidden="true">←</span> Voltar para os grupos</button>
+              <div class="group-actions">
+                <button class="text-button" id="edit-group-button" type="button">Editar grupo</button>
+                <button class="text-button text-danger" id="delete-group-button" type="button">Excluir</button>
+              </div>
+            </div>
+            <div class="link-list" id="link-list"></div>
+            <div class="empty-state empty-links" id="empty-links" hidden>
+              <div class="empty-icon" aria-hidden="true">↗</div>
+              <h3>Este grupo ainda está vazio</h3>
+              <p>Adicione um link para encontrá-lo aqui depois.</p>
+            </div>
+            <button class="add-link-card" id="add-link-button" type="button"><span class="plus" aria-hidden="true">+</span> Adicionar link</button>
+          </div>
+        </section>
+
+        <aside class="save-note">
+          <span class="save-note-icon" aria-hidden="true">✓</span>
+          <p><strong>Seus dados ficam com você.</strong> As alterações são salvas automaticamente neste navegador. O TXT é opcional: baixe uma cópia para backup ou para transferir seus links a outro navegador.</p>
+        </aside>
+      </main>
+
+      <footer class="footer"><span>Feito para guardar o que importa.</span><span class="footer-dot">●</span><span>Seus dados, no seu dispositivo.</span></footer>
+    </div>
+
+    <dialog class="editor-dialog" id="editor-dialog" aria-labelledby="dialog-title">
+      <form id="editor-form" novalidate>
+        <div class="dialog-topline"><span class="dialog-kicker" id="dialog-kicker">NOVO GRUPO</span><button class="icon-button" id="close-dialog" type="button" aria-label="Fechar">×</button></div>
+        <h2 id="dialog-title">Criar um grupo</h2>
+        <p class="dialog-description" id="dialog-description">Dê um nome para encontrar seus links com facilidade.</p>
+        <label class="field-label" for="name-input" id="name-label">Nome do grupo</label>
+        <input class="field-input" id="name-input" name="name" type="text" maxlength="80" placeholder="Ex.: Trabalho, Receitas, Viagens" required>
+        <div id="url-field" hidden>
+          <label class="field-label" for="url-input">Endereço do site</label>
+          <input class="field-input" id="url-input" name="url" type="url" inputmode="url" placeholder="https://exemplo.com" maxlength="2048">
+          <label class="field-label description-label" for="description-input">Descrição <span>(opcional)</span></label>
+          <textarea class="field-input field-textarea" id="description-input" name="description" rows="3" maxlength="300" placeholder="O que você encontra neste site?"></textarea>
+        </div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button class="button button-quiet" id="cancel-dialog" type="button">Cancelar</button><button class="button button-dark" id="submit-dialog" type="submit">Criar grupo</button></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
