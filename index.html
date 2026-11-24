@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f5f1eb">
     <meta name="description" content="Organize seus links pessoais com acesso individual pela sua conta Google.">
-    <title>Meus links</title>
+    <title>save_links</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,9 +15,9 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <a class="brand" href="#" id="brand-home" aria-label="Meus links, início">
+        <a class="brand" href="#" id="brand-home" aria-label="save_links, início">
           <span class="brand-mark" aria-hidden="true">↗</span>
-          <span>meus<span class="brand-light">links</span></span>
+          <span>save<span class="brand-light">_links</span></span>
         </a>
         <div class="topbar-actions">
           <button class="button button-quiet theme-toggle" id="theme-toggle" type="button" aria-label="Mudar para tema escuro" title="Mudar para tema escuro">
@@ -58,7 +58,10 @@
             <div class="groups-view" id="groups-view">
               <div class="section-heading">
                 <div><p class="section-kicker">ORGANIZAÇÃO</p><h2>Seus grupos</h2></div>
-                <button class="button button-outline" id="add-group-button" type="button"><span class="plus" aria-hidden="true">+</span> Novo grupo</button>
+                <div class="section-heading-actions">
+                  <button class="button button-outline" id="add-link-overview-button" type="button"><span class="plus" aria-hidden="true">+</span> Adicionar link</button>
+                  <button class="button button-outline" id="add-group-button" type="button"><span class="plus" aria-hidden="true">+</span> Novo grupo</button>
+                </div>
               </div>
               <div class="group-grid" id="group-list"></div>
               <div class="empty-state" id="empty-groups" hidden>
@@ -98,6 +101,14 @@
         <p class="dialog-description" id="dialog-description">Dê um nome para encontrar seus links com facilidade.</p>
         <label class="field-label" for="name-input" id="name-label">Nome do grupo</label>
         <input class="field-input" id="name-input" name="name" type="text" maxlength="80" placeholder="Ex.: Trabalho, Receitas, Viagens" required>
+        <div class="link-group-field" id="link-group-field" hidden>
+          <label class="field-label" for="link-group-select">Salvar link no grupo</label>
+          <select class="field-input" id="link-group-select" name="group"></select>
+          <div id="new-group-field" hidden>
+            <label class="field-label new-group-label" for="new-group-input">Nome do novo grupo</label>
+            <input class="field-input" id="new-group-input" name="new-group" type="text" maxlength="80" placeholder="Ex.: Trabalho, Estudos, Viagens">
+          </div>
+        </div>
         <div id="url-field" hidden>
           <label class="field-label" for="url-input">Endereço do site</label>
           <input class="field-input" id="url-input" name="url" type="url" inputmode="url" placeholder="https://exemplo.com" maxlength="2048">

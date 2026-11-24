@@ -1,4 +1,4 @@
-# Meus links — versão com login Google
+# save_links — versão com login Google
 
 Esta versão usa GitHub Pages para servir a interface e Firebase Authentication + Cloud Firestore para login e armazenamento. Cada conta Google só pode acessar os documentos dentro de `users/{uid}`.
 

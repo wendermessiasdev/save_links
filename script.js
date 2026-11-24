@@ -14,7 +14,8 @@ import {
   getDocs,
   getFirestore,
   serverTimestamp,
-  updateDoc
+  updateDoc,
+  writeBatch
 } from 'https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js';
 import { firebaseConfig, firebaseConfigured } from './firebase-config.js';
 
@@ -29,6 +30,9 @@ const form = $('#editor-form');
 const nameInput = $('#name-input');
 const urlInput = $('#url-input');
 const descriptionInput = $('#description-input');
+const linkGroupSelect = $('#link-group-select');
+const newGroupInput = $('#new-group-input');
+const NEW_GROUP_OPTION = '__create_new_group__';
 
 let auth = null;
 let db = null;
@@ -191,18 +195,43 @@ function openEditor(kind, item = null) {
   editorState = { kind, id: item?.id || null };
   const isLink = kind.includes('link');
   const isEdit = kind.startsWith('edit');
+  const isNewLink = kind === 'new-link';
   $('#dialog-kicker').textContent = `${isEdit ? 'EDITAR' : 'NOVO'} ${isLink ? 'LINK' : 'GRUPO'}`;
   $('#dialog-title').textContent = isEdit ? `Editar ${isLink ? 'link' : 'grupo'}` : `Criar ${isLink ? 'um link' : 'um grupo'}`;
-  $('#dialog-description').textContent = isLink ? 'Informe o endereço e, se quiser, uma breve descrição.' : 'Dê um nome para encontrar seus links com facilidade.';
+  $('#dialog-description').textContent = isNewLink
+    ? 'Escolha onde salvar. Você também pode criar um grupo novo agora.'
+    : (isLink ? 'Informe o endereço e, se quiser, uma breve descrição.' : 'Dê um nome para encontrar seus links com facilidade.');
   $('#name-label').textContent = isLink ? 'Nome do link' : 'Nome do grupo';
   $('#url-field').hidden = !isLink;
+  $('#link-group-field').hidden = !isNewLink;
+  $('#new-group-field').hidden = true;
+  newGroupInput.required = false;
   $('#submit-dialog').textContent = isEdit ? 'Salvar alterações' : (isLink ? 'Adicionar link' : 'Criar grupo');
   nameInput.value = item?.name || '';
   urlInput.value = item?.url || '';
   descriptionInput.value = item?.description || '';
+  newGroupInput.value = '';
+  if (isNewLink) {
+    populateLinkGroupOptions();
+    updateNewGroupField();
+  }
   $('#form-error').hidden = true;
   editorDialog.showModal();
   nameInput.focus();
+}
+
+function populateLinkGroupOptions() {
+  linkGroupSelect.replaceChildren();
+  linkGroupSelect.add(new Option('Selecione um grupo…', ''));
+  groups.forEach((group) => linkGroupSelect.add(new Option(group.name, group.id)));
+  linkGroupSelect.add(new Option('＋ Criar um grupo novo…', NEW_GROUP_OPTION));
+  linkGroupSelect.value = '';
+}
+
+function updateNewGroupField() {
+  const creatingGroup = linkGroupSelect.value === NEW_GROUP_OPTION;
+  $('#new-group-field').hidden = !creatingGroup;
+  newGroupInput.required = creatingGroup;
 }
 
 function openGroupEditor() {
@@ -218,11 +247,28 @@ async function saveEditor(event) {
   const name = nameInput.value.trim();
   const error = $('#form-error');
   const isLink = editorState.kind.includes('link');
+  const isNewLink = editorState.kind === 'new-link';
   if (!name) { error.textContent = 'Informe um nome para continuar.'; error.hidden = false; nameInput.focus(); return; }
   const url = isLink ? safeUrl(urlInput.value.trim()) : null;
   if (isLink && !url) { error.textContent = 'Digite um endereço válido começando com http:// ou https://.'; error.hidden = false; urlInput.focus(); return; }
+  const creatingGroup = isNewLink && linkGroupSelect.value === NEW_GROUP_OPTION;
+  const targetGroupId = isNewLink && !creatingGroup ? linkGroupSelect.value : selectedGroupId;
+  const newGroupName = newGroupInput.value.trim();
+  if (isNewLink && creatingGroup && !newGroupName) {
+    error.textContent = 'Dê um nome para o novo grupo.';
+    error.hidden = false;
+    newGroupInput.focus();
+    return;
+  }
+  if (isNewLink && !creatingGroup && !groupById(targetGroupId)) {
+    error.textContent = 'Escolha um grupo para salvar o link.';
+    error.hidden = false;
+    linkGroupSelect.focus();
+    return;
+  }
   const submit = $('#submit-dialog');
   submit.disabled = true;
+  let createdGroup = false;
   try {
     if (editorState.kind.endsWith('group')) {
       const groupRef = editorState.id
@@ -233,12 +279,30 @@ async function saveEditor(event) {
     } else {
       const linkData = { name, url, description: descriptionInput.value.trim(), updatedAt: serverTimestamp() };
       if (editorState.id) await updateDoc(userDocument('groups', selectedGroupId, 'links', editorState.id), linkData);
-      else await addDoc(userCollection('groups', selectedGroupId, 'links'), { ...linkData, createdAt: serverTimestamp() });
+      else if (creatingGroup) {
+        const groupRef = doc(userCollection('groups'));
+        const linkRef = doc(collection(groupRef, 'links'));
+        const batch = writeBatch(db);
+        batch.set(groupRef, { name: newGroupName, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        batch.set(linkRef, { ...linkData, createdAt: serverTimestamp() });
+        await batch.commit();
+        selectedGroupId = groupRef.id;
+        createdGroup = true;
+      } else {
+        await addDoc(userCollection('groups', targetGroupId, 'links'), { ...linkData, createdAt: serverTimestamp() });
+        selectedGroupId = targetGroupId;
+      }
     }
     editorDialog.close();
-    if (isLink) await loadLinks(selectedGroupId);
-    else await loadGroups();
-    toast(isLink ? 'Link salvo na sua conta.' : 'Grupo salvo na sua conta.');
+    if (isLink) {
+      groupsView.hidden = true;
+      linksView.hidden = false;
+      if (createdGroup) await loadGroups();
+      else await loadLinks(selectedGroupId);
+    } else {
+      await loadGroups();
+    }
+    toast(createdGroup ? 'Grupo e link salvos na sua conta.' : (isLink ? 'Link salvo no grupo.' : 'Grupo salvo na sua conta.'));
   } catch (saveError) {
     error.textContent = friendlyError(saveError);
     error.hidden = false;
@@ -287,10 +351,13 @@ async function showSignedIn(user) {
   currentUser = user;
   loginPanel.hidden = true;
   appPanel.hidden = false;
-  $('#user-email').textContent = user.email || user.displayName || 'Conta Google';
-  $('#user-email').hidden = false;
+  const googleProfile = user.providerData?.find((profile) => profile.providerId === 'google.com');
+  const email = user.email || googleProfile?.email || '';
+  const name = user.displayName?.trim() || googleProfile?.displayName?.trim() || '';
+  $('#user-email').textContent = email;
+  $('#user-email').hidden = !email;
   $('#signout-button').hidden = false;
-  $('#welcome-name').textContent = user.displayName ? `Olá, ${user.displayName.split(' ')[0]}` : 'Sua biblioteca';
+  $('#welcome-name').textContent = name ? `Olá, ${name}` : 'Olá!';
   await loadGroups();
 }
 
@@ -330,6 +397,7 @@ $('#signout-button').addEventListener('click', async () => {
   catch (error) { toast(friendlyError(error)); }
 });
 $('#add-group-button').addEventListener('click', () => openEditor('new-group'));
+$('#add-link-overview-button').addEventListener('click', () => openEditor('new-link'));
 $('#empty-groups').querySelector('[data-action="new-group"]').addEventListener('click', () => openEditor('new-group'));
 $('#back-button').addEventListener('click', goHome);
 $('#add-link-button').addEventListener('click', () => openEditor('new-link'));
@@ -337,6 +405,7 @@ $('#edit-group-button').addEventListener('click', openGroupEditor);
 $('#delete-group-button').addEventListener('click', removeGroup);
 $('#close-dialog').addEventListener('click', () => editorDialog.close());
 $('#cancel-dialog').addEventListener('click', () => editorDialog.close());
+linkGroupSelect.addEventListener('change', updateNewGroupField);
 form.addEventListener('submit', saveEditor);
 editorDialog.addEventListener('click', (event) => { if (event.target === editorDialog) editorDialog.close(); });
 
