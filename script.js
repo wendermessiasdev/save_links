@@ -14,6 +14,7 @@ import {
   getDocs,
   getFirestore,
   serverTimestamp,
+  setDoc,
   updateDoc,
   writeBatch
 } from 'https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js';
@@ -67,6 +68,7 @@ function toast(message) {
 
 function friendlyError(error) {
   const code = error?.code || '';
+  if (code === 'app/save-timeout') return 'O Firebase ainda não confirmou o salvamento. Confira sua conexão e tente novamente; o grupo não será duplicado.';
   if (code === 'auth/configuration-not-found' || code === 'auth/operation-not-allowed') return 'O Firebase Authentication ainda não está configurado para login Google. No Firebase Console, abra Authentication, clique em Começar se aparecer, ative Google em Sign-in method e salve um e-mail de suporte.';
   if (code === 'auth/unauthorized-domain') return 'Este endereço não está autorizado no Firebase Authentication. Em Authentication → Settings → Authorized domains, adicione localhost para testar localmente e o domínio do GitHub Pages para publicar.';
   if (code === 'auth/popup-closed-by-user') return 'A janela de login foi fechada antes de concluir.';
@@ -74,6 +76,20 @@ function friendlyError(error) {
   if (code === 'permission-denied') return 'O Firestore recusou o acesso. Confira se publicou as regras do arquivo firestore.rules.';
   if (code === 'unavailable') return 'O Firebase está temporariamente indisponível. Tente novamente em instantes.';
   return error?.message || 'Ocorreu um erro. Confira a configuração do Firebase e tente novamente.';
+}
+
+function waitForSave(operation) {
+  let timeoutId;
+  return Promise.race([
+    operation,
+    new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        const error = new Error('O Firebase demorou para confirmar o salvamento.');
+        error.code = 'app/save-timeout';
+        reject(error);
+      }, 15000);
+    })
+  ]).finally(() => clearTimeout(timeoutId));
 }
 
 function setAppError(message = '') {
@@ -267,15 +283,20 @@ async function saveEditor(event) {
     return;
   }
   const submit = $('#submit-dialog');
+  const submitLabel = submit.textContent;
   submit.disabled = true;
+  submit.textContent = 'Salvando…';
   let createdGroup = false;
   try {
     if (editorState.kind.endsWith('group')) {
-      const groupRef = editorState.id
-        ? userDocument('groups', editorState.id)
-        : null;
-      if (groupRef) await updateDoc(groupRef, { name, updatedAt: serverTimestamp() });
-      else await addDoc(userCollection('groups'), { name, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      if (editorState.id) {
+        await updateDoc(userDocument('groups', editorState.id), { name, updatedAt: serverTimestamp() });
+      } else {
+        // Reuse the same document id if the user retries after a slow/offline write.
+        editorState.pendingGroupId ||= doc(userCollection('groups')).id;
+        const groupRef = userDocument('groups', editorState.pendingGroupId);
+        await waitForSave(setDoc(groupRef, { name, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+      }
     } else {
       const linkData = { name, url, description: descriptionInput.value.trim(), updatedAt: serverTimestamp() };
       if (editorState.id) await updateDoc(userDocument('groups', selectedGroupId, 'links', editorState.id), linkData);
@@ -306,7 +327,10 @@ async function saveEditor(event) {
   } catch (saveError) {
     error.textContent = friendlyError(saveError);
     error.hidden = false;
-  } finally { submit.disabled = false; }
+  } finally {
+    submit.disabled = false;
+    submit.textContent = submitLabel;
+  }
 }
 
 async function removeLink(link) {
